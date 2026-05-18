@@ -1,0 +1,47 @@
+Today
+
+# ==========================================
+# 1. すべてを拒否 (Deny All)
+# ==========================================
+/*
+
+# ==========================================
+# 2. 公開して良いディレクトリの許可
+# ==========================================
+!/src/
+!/public/
+!/resources/
+!/database/
+!/config/
+!/routes/
+!/tests/
+
+# ==========================================
+# 3. 公開して良いファイルの許可
+# ==========================================
+!/README.md
+!/.gitignore
+!/composer.json
+!/composer.lock
+!/package.json
+!/package-lock.json
+!/artisan
+!/phpunit.xml
+!/vite.config.js
+
+# ==========================================
+# 4. 絶対に拒否する例外 (Blacklist)
+# ==========================================
+# ホワイトリスト形式でも、これらは「明示的」に拒否し続けます
+.env
+.env.*
+/vendor/
+/node_modules/
+/storage/*.key
+/storage/logs/
+/storage/framework/sessions/
+/public/hot
+/public/storage
+.phpunit.result.cache
+.DS_Store
+Now

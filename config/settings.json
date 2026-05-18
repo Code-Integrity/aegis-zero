@@ -1,0 +1,4 @@
+{
+"target_path": "/home/haru/daily-growth-record/src",
+"exclude_dirs": [".venv", "vendor", "node_modules", ".git", "storage"]
+}
