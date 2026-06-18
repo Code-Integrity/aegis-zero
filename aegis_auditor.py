@@ -1,81 +1,74 @@
-import ssl
-import socket
-import hashlib
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
+import subprocess
 
-def aegis_inspect(target_url, official_domain):
-    print(f"\n--- 🛡️ Aegis-Zero: 外勤調査開始 [{target_url}] ---")
-    hostname = urlparse(target_url).netloc
-
-    # 1. SSL指紋（Fingerprint）の抽出
+def aegis_js_scan(target_url):
+    print(f"\n--- 🏹 Aegis-Zero: バグハント開始 [{target_url}] ---")
+    
     try:
-        context = ssl.create_default_context()
-        with socket.create_connection((hostname, 443), timeout=5) as sock:
-            with context.wrap_socket(sock, server_hostname=hostname) as ssock:
-                cert_bin = ssock.getpeercert(binary_form=True)
-                fingerprint = hashlib.sha256(cert_bin).hexdigest().upper()
-                print(f"[SSL指紋] {fingerprint}")
-    except Exception as e:
-        print(f"[SSL警告] 接続に失敗しました: {e}")
-        return
-
-    # 2. HTMLフォームの宛先（action）をスキャン
-    try:
-        response = requests.get(target_url, timeout=5)
+        response = requests.get(target_url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
         soup = BeautifulSoup(response.text, 'html.parser')
-        forms = soup.find_all('form')
         
-        print(f"[フォーム数] {len(forms)}個検出")
-        for i, form in enumerate(forms, 1):
-            action = form.get('action', '')
-            print(f"  Form {i} 送信先: {action}")
-            
-            # ゼロトラスト判定：公式ドメイン以外に飛ばそうとしていないか？
-            if action.startswith('http') and official_domain not in action:
-                print(f"  🚨 【重大警告】 不審な送信先を検知しました！")
-            else:
-                print(f"  ✅ 送信先はポリシーに適合しています。")
-                
+        # 1. ページ内に直接書かれているインラインJavaScriptを抽出
+        scripts = soup.find_all('script')
+        print(f"[インラインJS] {len(scripts)}個のスクリプトブロックを検出")
+        
+        for i, script in enumerate(scripts, 1):
+            js_code = script.string
+            if js_code and len(js_code).strip() > 0:
+                # 危険なキーワード（Sink）が1つでも含まれているか簡易スクリーニング
+                sinks = [s for s in ['document.write', 'innerHTML', 'eval(', 'location.href'] if s in js_code]
+                if sinks:
+                    print(f"  🚨 Block {i}: 危険なSink {sinks} を検知！AIに精密解析を依頼します...")
+                    # Ollamaを召喚して解析
+                    ai_report = ask_aegis_ai_hunter(js_code, "Inline-Script")
+                    print(ai_report)
+                    print("-" * 40)
+
     except Exception as e:
         print(f"[解析エラー] HTMLの取得に失敗しました: {e}")
 
-# --- テスト実行（例：GitHubのログインページを模して） ---
-if __name__ == "__main__":
-    # 調査したいURLと、そのサイトの「正しいドメイン」を入力
-    target = "https://github.com"
-    official = "github.com"
-    aegis_inspect(target, official)
-
-import subprocess
-
-def ask_aegis_ai(current_fp, whitelist_fp, form_status):
-    """Llama 3.2 (Ollama) に最終的な安全判定を依頼する"""
+def ask_aegis_ai_hunter(js_code, source_type):
+    """Llama 3.2 (Ollama) にハッカーとしてコードの脆弱性解析を依頼する"""
     
-    # AIへの指令（プロンプト）
+    # バグバウンティ専用の「ハッカー仕様プロンプト」
     prompt = f"""
-    [Aegis-Zero 外勤調査報告]
-    観測されたSSL指紋: {current_fp}
-    公式ホワイトリスト: {whitelist_fp}
-    フォーム解析結果: {form_status}
+    あなたはHackerOneで賞金を狙うエリートハッカーです。
+    提供されたJavaScriptコード（種類: {source_type}）を静的解析し、外部からの入力値（URLパラメータやlocation.searchなど）が、安全に処理されずに危険な関数（document.write, innerHTML, eval, location.hrefなど）へ流れ込んでいる『DOMベースXSS』の脆弱性があるか判定してください。
+
+    【解析対象のコード】
+    {js_code}
 
     【任務】
-    上記データを照合し、このサイトが「本物」か「中間者攻撃(MITM)による偽物」か判定せよ。
-    指紋が1文字でも違えば、即座に「DENY（拒絶）」と答え、その理由を簡潔に述べよ。
+    1. 脆弱性（DOMベースXSS）が「ある（VULNERABLE）」か「ない（SAFE）」かを明確に答えてください。
+    2. 脆弱性がある場合、危険な関数（Sink）の名前と、外部からのデータの入り口（Source）を特定してください。
+    3. このバグを実際に発動（PoC）させるための、具体的な攻撃ペイロード（例：<script>alert(1)</script> などを用いた具体的なURLや入力値の例）を提示してください。
     """
 
     # Ollama (Llama 3.2) を召喚
-    result = subprocess.run(
-        ['ollama', 'run', 'llama3.2', prompt],
-        capture_output=True, text=True, encoding='utf-8'
-    )
-    return result.stdout
+    try:
+        result = subprocess.run(
+            ['ollama', 'run', 'llama3.2', prompt],
+            capture_output=True, text=True, encoding='utf-8', timeout=30
+        )
+        return result.stdout
+    except Exception as e:
+        return f"[AI召喚エラー] {e}"
 
-# --- 判定シミュレーション ---
-official_fp = "9716D39441CA651C51BE78E969CA385EC213EC17715B8C91F01EE652F90FC62C"
-# current_fp = auditor.get_ssl_fingerprint() # 実際はここで取得
-
-# AIの回答を表示
-# print(ask_aegis_ai(current_fp, official_fp, "正常"))
-
+# --- 実戦テスト（例：PortSwiggerのアカデミーで今見つけたバグのコードを模して） ---
+if __name__ == "__main__":
+    # ターゲットURLの指定（実戦時はここを変える）
+    # target = "https://example.com"
+    # aegis_js_scan(target)
+    
+    # テスト用：さっきPortSwiggerで見つけた実際のdocument.writeのコードを直接流し込んでみる
+    test_code = """
+    var query = (new URLSearchParams(window.location.search)).get('search');
+    if (query) {
+        document.write('<img src="/resources/images/tracker.gif?searchTerms='+query+'">');
+    }
+    """
+    print("[テスト] さっきのPortSwiggerのバグコードをAIチェッカーに投げてみます...")
+    report = ask_aegis_ai_hunter(test_code, "PortSwigger-Lab1")
+    print(report)
