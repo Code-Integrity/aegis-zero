@@ -1,4 +1,9 @@
 {
-"target_path": "/home/haru/daily-growth-record/src",
-"exclude_dirs": [".venv", "vendor", "node_modules", ".git", "storage"]
+  "enable_scoring": true,
+  "enable_llama_payload": true,
+  "enable_llama_inference": false,
+
+  "depth_level": 4,
+  "verbose": true,
+  "save_intermediate": true
 }
