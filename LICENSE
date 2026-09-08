@@ -1,0 +1,52 @@
+Apache License
+Version 2.0, January 2004
+https://www.apache.org/licenses/
+
+Copyright (c) 2026 Code-Integrity
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this project except in compliance with the License.
+You may obtain a copy of the License at:
+
+https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+---
+
+# 🌟 Aegis‑Zero Additional Notice (Non‑Legal, Informational)
+
+---
+
+This project includes original analysis logic, structural design,
+and security reasoning patterns created by Code-Integrity.
+
+These components represent unique intellectual work such as:
+
+- Depth4 structural reasoning methodology
+- SAFE recon iterative observation workflow
+- DevTools anomaly scoring philosophy
+- Recon tree design and analysis heuristics
+- Auditor prompt design and inference structure
+
+While the Apache License permits reuse, modification, and commercial use,
+the author requests the following courtesy guidelines:
+
+1. **Attribution**
+   Please credit “Code‑Integrity” when using or modifying
+   the structural reasoning concepts or analysis workflows.
+
+2. **No Misrepresentation**
+   Do not claim the Depth4 methodology, SAFE recon workflow,
+   or auditor reasoning patterns as your own original invention.
+
+3. **Academic / Corporate Ethics**
+   If used in training materials, corporate security frameworks,
+   or educational programs, please include clear attribution.
+
+These courtesy guidelines do not modify the Apache License terms
+and are provided to preserve the integrity of the author's work.

@@ -1,5 +1,3 @@
-Today
-
 # ==========================================
 # 1. すべてを拒否 (Deny All)
 # ==========================================
@@ -8,40 +6,71 @@ Today
 # ==========================================
 # 2. 公開して良いディレクトリの許可
 # ==========================================
-!/src/
-!/public/
-!/resources/
-!/database/
+!/auditors/
+!/prompts/
 !/config/
-!/routes/
-!/tests/
+!/utils/
+!/.vscode/
 
 # ==========================================
 # 3. 公開して良いファイルの許可
 # ==========================================
 !/README.md
+!/run_analysis.py
 !/.gitignore
-!/composer.json
-!/composer.lock
-!/package.json
-!/package-lock.json
-!/artisan
-!/phpunit.xml
-!/vite.config.js
+!/LICENSE
 
 # ==========================================
-# 4. 絶対に拒否する例外 (Blacklist)
+# Aegis-Zero: Security & Privacy Protection
 # ==========================================
-# ホワイトリスト形式でも、これらは「明示的」に拒否し続けます
-.env
-.env.*
-/vendor/
-/node_modules/
-/storage/*.key
-/storage/logs/
-/storage/framework/sessions/
-/public/hot
-/public/storage
-.phpunit.result.cache
+
+# ---- DevTools logs (絶対に公開してはいけない領域) ----
+logs/devtools/
+logs/devtools/**
+
+# HAR / JSON / Storage dumps
+*.har
+*.har.json
+storage.json
+console.json
+network.json
+sources.json
+
+# ---- Browser storage exports ----
+*.localstorage
+*.sessionstorage
+*.cookies
+*.webstorage
+
+# ---- Temporary analysis outputs ----
+analysis_output/
+analysis_output/**
+
+# ---- Python cache ----
+__pycache__/
+*.pyc
+
+# ---- Virtual environments ----
+venv/
+.env/
+.envrc
+
+# ---- Model weights (巨大ファイル・非公開) ----
+models/**/*.bin
+models/**/*.pth
+models/**/*.safetensors
+models/**/weights/
+models/**/checkpoints/
+
+# ---- LLM runtime cache ----
+.llama/
+.ollama/
+deepseek_cache/
+qwen_cache/
+
+# ---- OS / Editor junk ----
 .DS_Store
-Now
+Thumbs.db
+
+# ---- VS Code ----
+.vscode/

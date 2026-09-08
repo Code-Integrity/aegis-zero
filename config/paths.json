@@ -1,0 +1,14 @@
+{
+  "devtools_dir": "logs/devtools",
+  "output_dir": "output",
+
+  "network_file": "logs/devtools/network.json",
+  "console_file": "logs/devtools/console.json",
+  "storage_file": "logs/devtools/storage.json",
+  "sources_file": "logs/devtools/sources.json",
+
+  "depth4_output": "output/trees/depth4_tree.json",
+  "scoring_output": "output/analysis/scoring_result.json",
+  "llama_payload": "output/analysis/llama_payload.json",
+  "llama_output": "output/analysis/llama_output.txt"
+}
