@@ -1,205 +1,150 @@
 # Aegis-Zero
 
 Self-Driven Browser Security Analysis Framework
-DevTools Log Analysis (SAFE recon) + JavaScript Static Analysis (Auditors)
-
-Aegis-Zero is a multi-module, self-driven security analysis framework designed to analyze
-browser behavior and client-side JavaScript using structured reasoning and LLM-assisted inference.
-
-It combines two powerful perspectives:
-
-1. **SAFE recon** — Deep structural analysis of browser DevTools logs
-2. **Auditors** — Static analysis of JavaScript for DOM-Based XSS and other vulnerabilities
-
-Together, these modules provide a dual-layer understanding of browser security:
-**runtime behavior + code-level logic**.
+DevTools Log Correlation (SAFE recon) + Precision JavaScript Static Analysis (Auditors)
+Aegis-Zero is a multi-module, self-driven security reconnaissance and analysis framework designed to isolate client-side browser behavior vulnerabilities using data-driven correlation and LLM-assisted structural inference.
+Unlike flat scanner blueprints, Aegis-Zero models runtime state logs into an integrated, causal-linked binary tree mapping matrix, flags high-suspicion code vectors, and automatically coordinates targeted static analysis checks to output turn-key HackerOne-style triage document artifacts.
 
 ---
 
-## 1. Core Concepts
+## 1. Core Architecture & Philosophy
 
-### SAFE recon (DevTools Log Analysis)
+The framework operates on a dual-layer, zero-trust perimeter analysis approach: Runtime Context Modeling + Automated Targeted Code Verification.
 
-SAFE recon transforms raw DevTools logs into a structured Depth4 binary tree, enabling:
+[Raw DevTools Traces]
+│ (Network, Console, Storage, Sources)
+▼
+┌────────────────────────────────────────┐
+│ 1. SAFE recon Layer (Depth4 Mapping) │
+│ - Generates structural logic tree │
+│ - Traces cross-tab causal relations │
+└────────────────────────────────────────┘
+│
+▼
+┌────────────────────────────────────────┐
+│ 2. Tactical Risk Scoring Engine │
+│ - Weighted bounty risk validation │
+│ - Priority sorting (High -> Low) │
+└────────────────────────────────────────┘
+│
+▼
+┌────────────────────────────────────────┐
+│ 3. Abstracted Cognitive Layer │
+│ - Decoupled Local LLM Orchestrator │
+│ - Isolates Responsibility Drifts │
+└────────────────────────────────────────┘
+│ (High/Medium Suspicion Targets Verified)
+▼
+┌────────────────────────────────────────┐
+│ 4. Precision Static Auditors │
+│ - Secure string template engine scan │
+│ - Automatic HackerOne Markdown Output │
+└────────────────────────────────────────┘
 
-- Event flow reconstruction
-- Structural anomaly detection
-- Responsibility mismatch analysis
-- Timing and dependency evaluation
-- LLM-assisted reasoning for hidden causes
-- Re-observation loop (iterative refinement)
+## 🧠 Causal-Linked Depth4 Trees
 
-This module is ideal for analyzing:
+Rather than auditing source files blindly in a vacuum, Aegis-Zero dynamically links disparate browser events (e.g., an unhardened response header mapping to an immediate localStorage transaction which flows into a source code script execution context).
+The engine synthesizes these cross-layer paths into four explicit dimensional scopes:
 
-- Network requests
-- Storage access
-- Console events
-- Script execution
-- Browser subsystem interactions
-
----
-
-### JavaScript Auditors (Static Analysis)
-
-The `auditors/` directory contains independent modules for client-side JS analysis.
-
-Current implementation:
-
-#### **DOM-Based XSS Auditor**
-
-- Extracts inline JavaScript from HTML
-- Detects dangerous sinks (document.write, innerHTML, eval, location.href)
-- Uses LLM reasoning to identify sources → sinks data flow
-- Generates realistic PoC payloads
-- HackerOne-style vulnerability reporting
-
-Future modules may include:
-
-- Cookie Auditor
-- CSP Auditor
-- CORS Auditor
-- Storage Access Auditor
-- Script Injection Auditor
+- Depth 1 (Observed Event): Raw operational perimeter capture telemetry.
+- Depth 2 (Surface Cause): Evident technical boundary failures (e.g., Non-2xx redirects, raw exceptions).
+- Depth 3 (Structural Cause): Systemic architecture patterns (e.g., Wildcard CORS settings, raw token processing scopes).
+- Depth 4 (Responsibility Drift): Severe data access delegation slippages indicating high exploitability.
 
 ---
 
 ## 2. Directory Structure
 
-aegis-zero/ recon/ devtools_extract.py depth4_tree.py scoring.py
-
-auditors/ js_domxss_auditor.py
-
-models/ llama3/ inference.py
-
-prompts/ llama3_depth4_prompt.txt deepseek_prompt.txt qwen_prompt.txt js_domxss_prompt.txt
-
-utils/ file_io.py formatter.py logger.py
-
-config/ model.json paths.json settings.json
-
-run_analysis.py README.md
-
-This structure ensures strict responsibility separation and high extensibility.
-
----
-
-## 3. SAFE recon Workflow
-
-1. Extract DevTools logs
-2. Normalize logs into structured JSON
-3. Build Depth4 binary tree
-4. Score nodes for anomaly likelihood
-5. Generate LLM prompt
-6. Infer structural causes and mismatches
-7. Identify nodes requiring re-observation
-8. Iterate (SAFE recon loop)
-
-LLM models supported:
-
-- LLaMA3
-- DeepSeek-R1
-- Qwen2.5
-- Any Ollama-compatible model
+aegis-zero/
+├── auditors/
+│ └── js_domxss_auditor.py # Precision JS sink checking & H1 compiler
+├── config/
+│ ├── model.json # Abstracted LLM execution schemas
+│ ├── paths.json # Application file system maps
+│ └── settings.json # Functional execution toggle configuration
+├── logs/
+│ └── devtools/ # Target ingestion area for raw JSON dumps
+├── models/
+│ └── inference_engine.py # Abstracted Polymorphic LLM orchestrator
+├── output/
+│ ├── analysis/ # Serialized payloads and raw AI reason traces
+│ ├── reports/ # Production-ready HackerOne markdown outputs
+│ └── trees/ # Compiled relational Depth4 structural trees
+├── prompts/
+│ ├── llama3_depth4_prompt.txt # Architecture mapping prompt (Japanese output configuration)
+│ └── js_domxss_prompt.txt # Static vulnerability evaluation prompt
+├── requirements.txt # System dependency configuration definitions
+└── run_analysis.py # Core automation controller entry point
 
 ---
 
-## 4. Auditor Workflow (DOM-Based XSS)
+## 3. Configuration Management## Centralized Engine Model Configuration (config/model.json)
 
-1. Fetch HTML
-2. Extract inline `<script>` blocks
-3. Detect dangerous sinks
-4. Build HackerOne-style prompt
-5. Run LLM inference
-6. Output structured JSON report:
+The cognitive stack utilizes a polymorphic model wrapper layer. Easily hot-swap between high-performance local variants via your local Ollama instance registry without modifying script definitions:
 
-- verdict
-- sources
-- sinks
-- poc_payload
-- root_cause
-
----
-
-## 5. Model Configuration
-
-All modules share a unified configuration file:
-
-### `config/model.json`
-
-```json
 {
-  "llama_model_path": "/models/llama3.1-70b-q4_k_m",
-  "prompt_file": "prompts/llama3_depth4_prompt.txt",
-  "context_length": 8192,
-  "temperature": 0.1,
-  "top_p": 0.9,
-  "max_tokens": 4096
+"llama_model_path": "deepseek-r1:14b",
+"prompt_file": "prompts/llama3_depth4_prompt.txt",
+"context_length": 16384,
+"temperature": 0.1,
+"top_p": 0.9,
+"max_tokens": 4096
 }
-```
-
-Switching models only requires updating:
-
-• llama_model_path
-• prompt_file
 
 ---
 
-## 6. Usage
+## 4. Operation & Ingestion Sequence## 1. Ingestion Setup
 
-SAFE recon (DevTools Analysis)
+Drop your target browser session trace files directly into the configuration deployment paths:
 
-python run_analysis.py
+- logs/devtools/network.json
+- logs/devtools/console.json
+- logs/devtools/storage.json
+- logs/devtools/sources.json
 
-DOM-Based XSS Auditor
+## 2. Core Automation Runtime Execution
 
-from auditors.js_domxss_auditor import aegis_js_scan
-aegis_js_scan("https://example.com")
+Deploy the orchestrator loop. The system automatically handles target output file system generation, threat validation weights sorting, AI reasoning loops, and precision targeted code scanner injections:
 
----
+python3 run_analysis.py
 
-## 7. Extensibility
+## 3. Triage Report Collection
 
-Aegis-Zero is designed for long-term growth:
+Review high-suspicion artifacts and turn-key bug bounty document templates compiled automatically into the designated workspace reports cache:
 
-• Add new auditors easily
-• Swap LLM models without code changes
-• Extend Depth4 logic safely
-• Integrate new browser subsystems
-• Build custom scoring modules
-
-The framework is intentionally modular and future-proof.
+- Relational Threat Maps: output/analysis/scoring_result.json (Sorted cleanly by high-priority risk weight indexes).
+- AI Cognitive Reports: output/analysis/llama_output.txt (Structured structural analysis mapping).
+- Bounty Triage Markdown: output/reports/h1*report*\*.md (Ready-to-submit security report structures outlining full causal chains, impacts, and verification PoCs).
 
 ---
 
-## 8. Philosophy
+## 5. Security & Isolation Management (.gitignore)
 
-Aegis-Zero is built on three principles:
+Aegis-Zero strictly safeguards highly sensitive target telemetry details, tokens, and local infrastructure paths during open repository control management. Ensure the production .gitignore layout is accurately established:
 
-1. Structural Reasoning
+/\*
+!/auditors/
+!/prompts/
+!/config/
+!/utils/
+!/.vscode/
+!/README.md
+!/run_analysis.py
+!/.gitignore
+!/LICENSE
 
-Security issues often emerge from structural inconsistencies, not isolated events.
-
-2. Responsibility Separation
-
-Each module has a clear, isolated responsibility to prevent logic leakage.
-
-3. Iterative Observation
-
-Security analysis is a loop: observe → infer → re-observe → refine.
+/logs/devtools/**
+/output/**
+/models/\*_
+**pycache**/
+_.pyc
+.venv/
 
 ---
 
-## 9. Summary
+## Developed autonomously for modern high-velocity bug bounty reconnaissance workflows.
 
-Aegis-Zero is a self-driven security analysis framework combining:
-
-• Depth4 structural analysis of browser behavior
-• LLM-assisted reasoning for hidden causes
-• Static JavaScript vulnerability detection
-
-It provides a powerful dual perspective for modern web security research and bug bounty workflows.
-
-## License
+## 6. License
 
 This project is licensed under the Apache License 2.0.
 
@@ -208,12 +153,12 @@ A full copy of the license is available at:
 
 https://www.apache.org/licenses/LICENSE-2.0
 
-## Contributing
+## 7. Contributing
 
 Contributions are welcome.
 Feel free to open issues or submit pull requests.
 
-## Additional Author Notice (Non‑Legal)
+## 8. Additional Author Notice (Non‑Legal)
 
 This project includes original analysis logic, structural reasoning patterns,
 and security workflow designs created by **Code‑Integrity**.

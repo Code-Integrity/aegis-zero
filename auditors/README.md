@@ -1,148 +1,100 @@
-# Aegis-Zero Auditors
+# Aegis-Zero Auditors## Precision JavaScript Static Analysis Module (Targeted Vulnerability Verification)
 
-JavaScript Static Analysis Module (DOM-Based XSS Auditor)
-
-Aegis-Zero provides not only DevTools log analysis (SAFE recon) but also a dedicated
-static analysis module for client-side JavaScript.
-The `auditors/` directory contains independent analysis modules designed to detect
-vulnerabilities using LLM-assisted reasoning.
-
-The current implementation focuses on the **DOM-Based XSS Auditor**.
+The auditors/ directory encompasses independent, pluggable static analysis utility modules designed to dissect client-side source code, locate injection vectors, and synthesize deterministic exploit proofs via localized LLM pipeline queries.
+The primary operational engine deployed within this registry is the DOM-Based XSS & Dynamic Code Execution Auditor.
 
 ---
 
-## 1. Module Overview
+## 1. Module Overview: js_domxss_auditor.py
 
-### `js_domxss_auditor.py`
+This engine performs fine-grained static dataflow tracing against isolated JavaScript targets, determining the precise link between untrusted input entries (Sources) and unshielded runtime evaluation primitives (Sinks).
 
-This module performs static analysis on inline JavaScript code and determines whether
-a **DOM-Based XSS** vulnerability exists.
+## 🛠️ Key Architectural Enhancements
 
-Key features:
-
-- Inline `<script>` extraction using BeautifulSoup
-- Lightweight detection of dangerous sinks (document.write, innerHTML, eval, location.href)
-- LLM-powered static analysis (LLaMA3 / DeepSeek / Qwen)
-- HackerOne-style prompt that generates realistic PoC payloads
-- Operates independently from SAFE recon (DevTools analysis)
+- Polymorphic Ingress Ingestion: Automatically toggles processing behaviors between parsing inner HTML inline <script> scopes and directly orchestrating network fetches to swallow standalone remote static assets (e.g., auth.js) passed directly from the recon phase.
+- Crash-Resilient Template Parsing: Utilizes strict string.Template key-substitution bindings rather than basic Python .format() calls, completely eliminating runtime crashes triggered by the native curly-brace {} structures inherent to JavaScript logic.
+- Automated Triage Compilation: Dynamically captures successful AI telemetry outputs and auto-compiles ready-to-submit HackerOne vulnerability advisories directly onto the persistent markdown repository storage path.
 
 ---
 
-## 2. Analysis Flow
+## 2. Ingress Analysis Sequence Flow
 
-1. **Fetch HTML**
-   The target page is retrieved using `requests.get()`.
-
-2. **Extract Inline JavaScript**
-   BeautifulSoup scans all `<script>` tags.
-
-3. **Detect Dangerous Sinks**
-   If any of the following keywords appear, AI analysis is triggered:
-
-- `document.write`
-- `innerHTML`
-- `eval(`
-- `location.href`
-
-4. **Prompt Generation**
-   The template `prompts/js_domxss_prompt.txt` is loaded and populated with
-   `{js_code}` and `{source_type}`.
-
-5. **LLM Inference**
-   The module uses `run_llama_inference(prompt)` from
-   `models/llama3/inference.py`.
-
-6. **Structured Output (JSON)**
-
-- verdict (VULNERABLE / SAFE)
-- sources (external input)
-- sinks (dangerous functions)
-- poc_payload (attack payload)
-- root_cause (reason for vulnerability)
+[Target URL Ingress]
+│
+▼
+┌───────────────────────┐
+│ 1. Data Fetch │ ──► Enforces strict requests client User-Agent masking
+└───────────────────────┘
+│
+▼
+┌───────────────────────┐
+│ 2. Telemetry Routing │ ──► Identifies content types (HTML DOM vs Standalone Script File)
+└───────────────────────┘
+│
+▼
+┌───────────────────────┐
+│ 3. Sink Telemetry │ ──► Isolates keywords: innerHTML, document.write, eval(, location.href
+└───────────────────────┘
+│
+▼
+┌───────────────────────┐
+│ 4. Prompt Synthesis │ ──► Mapped safely via string.Template keys ($js*code, $source_type)
+└───────────────────────┘
+│
+▼
+┌───────────────────────┐
+│ 5. Core Inference │ ──► Interfaces seamlessly via the centralized models/inference_engine
+└───────────────────────┘
+│
+▼
+┌───────────────────────┐
+│ 6. Auto-Compilation │ ──► Exports complete triage document maps to output/reports/h1_report*\*.md
+└───────────────────────┘
 
 ---
 
-## 3. Usage
+## 3. Usage & Execution Integration## Automated Execution (Pipeline Orchestration Mode)
 
-### From Python
+The Auditor layer triggers automatically when run_analysis.py flags an asset URL meeting the threat boundary scoring metrics inside config/settings.json:
 
-```python
+"enable_targeted_auditor": true
+
+## Manual Sandbox Verification (CLI Mode)
+
+To standalone-audit a targeted online asset or script path independently of the global DevTools tracking logs, query the script endpoint directly:
+
+python3 auditors/js_domxss_auditor.py
+
+## Script API Ingress Integration
+
 from auditors.js_domxss_auditor import aegis_js_scan
 
-aegis_js_scan("https://example.com")
+# Scans HTML endpoints for inline blocks, or standalone JS links directly
 
-
-Manual Testing (CLI)
-
-python auditors/js_domxss_auditor.py
-
-
-```
-
-## 4. Prompt File
-
-`prompts/js_domxss_prompt.txt`
-
-This is the HackerOne-style prompt used for LLM analysis.
-It determines DOM-XSS presence, identifies sinks/sources, and generates PoC payloads.
-
-The template uses {js_code} and {source_type} placeholders.
+aegis_js_scan("https://target-app.com")
 
 ---
 
-## 5. Model Configuration
+## 4. Unified Artifact Dependencies## Centralized Reasoning Prompt (prompts/js_domxss_prompt.txt)
 
-The model used for analysis is defined in config/model.json.
+Contains the definitive, highly structured HackerOne simulation logic rules. Configured to output comprehensive vulnerability breakdowns, execution flow tracking, and precise context payloads in Japanese (日本語) to maximize hunter triage efficiency.
 
-```
-Example:
+## System Path Registry Definitions (config/paths.json)
 
-{
-"llama_model_path": "/models/llama3.1-70b-q4_k_m",
-"prompt_file": "prompts/js_domxss_prompt.txt",
-"context_length": 8192,
-"temperature": 0.1,
-"top_p": 0.9,
-"max_tokens": 4096
-}
+The output report directories are fully mapped into the unified path scheme. Generated Markdown documents are cleanly committed to:
 
-```
-
-Switching to DeepSeek or Qwen only requires updating
-llama_model_path and prompt_file.
+output/reports/h1*report*[target_identifier_suffix].md
 
 ---
 
-## 6. Extensibility
+## 5. Extensibility Framework
 
-This directory is designed to support additional modules in the future:
+The auditors/ ecosystem architecture is deliberately isolated and decoupled (疎結合). You can expand the analytical perimeter by simply dropping independent auditing scripts into this directory without modifying the core recon logging logic:
 
-• Cookie Auditor
-• CSP Auditor
-• CORS Auditor
-• Storage Access Auditor
-• Script Injection Auditor
-
-Aegis-Zero is built as a multi-module, self-driven security analysis framework.
+- 🛡️ cookie_auditor.py: Hardening evaluation of SameSite, Secure, and HttpOnly attributes.
+- 🌐 cors_auditor.py: Verification of cross-origin state leakage controls.
+- 🔒 csp_auditor.py: Structural review of active layout restriction policies.
 
 ---
 
-## 7. Notes
-
-• External JavaScript file analysis will be added later
-• Dynamically generated JS (eval / new Function) may require deeper LLM assistance
-• PoC payloads should be manually validated
-• This module performs static analysis; runtime behavior must be verified separately
-
----
-
-## 8. Summary
-
-auditors/ contains independent analysis modules that complement SAFE recon.
-The DOM-Based XSS Auditor provides a powerful LLM-assisted static analysis engine
-for client-side vulnerabilities.
-
-Combined with DevTools analysis, Aegis-Zero offers a dual-perspective approach
-to browser security: structural behavior + JavaScript logic.
-
----
+## Maintained under proprietary security engineering standards by Code‑Integrity.

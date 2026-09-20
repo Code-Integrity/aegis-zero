@@ -1,7 +1,7 @@
 {
-  "llama_model_path": "/models/llama3.1-70b-q4_k_m",
+  "llama_model_path": "deepseek-r1:14b",
   "prompt_file": "prompts/llama3_depth4_prompt.txt",
-  "context_length": 8192,
+  "context_length": 16384,
   "temperature": 0.1,
   "top_p": 0.9,
   "max_tokens": 4096
