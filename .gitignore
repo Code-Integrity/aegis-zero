@@ -1,34 +1,33 @@
-# ==========================================
-# 1. すべてを拒否 (Deny All)
-# ==========================================
+# ==============================================================================
+# 1. Default Security Perimeter: Deny All (Strict Blacklist)
+# ==============================================================================
 /*
 
-# ==========================================
-# 2. 公開して良いディレクトリの許可
-# ==========================================
+# ==============================================================================
+# 2. Structural Allowances: Directory Whitelist
+# ==============================================================================
 !/auditors/
 !/prompts/
 !/config/
 !/utils/
-!/.vscode/
 
-# ==========================================
-# 3. 公開して良いファイルの許可
-# ==========================================
+# ==============================================================================
+# 3. Structural Allowances: Core Files Whitelist
+# ==============================================================================
 !/README.md
 !/run_analysis.py
 !/.gitignore
 !/LICENSE
 
-# ==========================================
-# Aegis-Zero: Security & Privacy Protection
-# ==========================================
+# ==============================================================================
+# 4. Aegis-Zero: Targeted Security & Privacy Protection Overrides
+# ==============================================================================
 
-# ---- DevTools logs (絶対に公開してはいけない領域) ----
-logs/devtools/
-logs/devtools/**
+# ---- Raw DevTools Logs (Absolute Privacy Lockdown) ----
+/logs/devtools/
+/logs/devtools/**
 
-# HAR / JSON / Storage dumps
+# Standalone diagnostic data / trace formats
 *.har
 *.har.json
 storage.json
@@ -36,39 +35,44 @@ console.json
 network.json
 sources.json
 
-# ---- Browser storage exports ----
+# ---- Browser Storage State Artifacts ----
 *.localstorage
 *.sessionstorage
 *.cookies
 *.webstorage
 
-# ---- Temporary analysis outputs ----
-analysis_output/
-analysis_output/**
+# ---- Analytical Output Repositories ----
+/analysis_output/
+/analysis_output/**
+/output/
+/output/**
 
-# ---- Python cache ----
+# ---- Python Execution Environment Cache ----
 __pycache__/
 *.pyc
 
-# ---- Virtual environments ----
+# ---- Python Virtual Environments ----
 venv/
+.venv/
 .env/
 .envrc
 
-# ---- Model weights (巨大ファイル・非公開) ----
+# ---- Localized AI Model Weight Files (Proprietary / Volumetric Assets) ----
+/models/
+/models/**
 models/**/*.bin
 models/**/*.pth
 models/**/*.safetensors
 models/**/weights/
 models/**/checkpoints/
 
-# ---- LLM runtime cache ----
+# ---- Local LLM Engine Cache Runtime ----
 .llama/
 .ollama/
 deepseek_cache/
 qwen_cache/
 
-# ---- OS / Editor junk ----
+# ---- Operating System Artifacts & Junk ----
 .DS_Store
 Thumbs.db
 

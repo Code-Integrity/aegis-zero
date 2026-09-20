@@ -1,9 +1,11 @@
 {
   "enable_scoring": true,
   "enable_llama_payload": true,
-  "enable_llama_inference": false,
+  "enable_llama_inference": true,
+  "enable_targeted_auditor": true,
 
   "depth_level": 4,
   "verbose": true,
-  "save_intermediate": true
+  "save_intermediate": true,
+  "debug_mode": false
 }

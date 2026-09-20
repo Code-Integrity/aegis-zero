@@ -1,6 +1,11 @@
+# utils/logger.py
+
 from datetime import datetime
 
-def log(msg):
-"""Simple timestamped logger."""
-ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-print(f"[{ts}] {msg}")
+def log(message: str) -> None:
+    """
+    Standardized framework application logger. 
+    Injects high-precision timing parameters to support runtime event sequence sorting.
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{timestamp}] {message}")
