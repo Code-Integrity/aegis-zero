@@ -1,4 +1,6 @@
-# Aegis-Zero Auditors## Precision JavaScript Static Analysis Module (Targeted Vulnerability Verification)
+# Aegis-Zero Auditors
+
+## Precision JavaScript Static Analysis Module (Targeted Vulnerability Verification)
 
 The auditors/ directory encompasses independent, pluggable static analysis utility modules designed to dissect client-side source code, locate injection vectors, and synthesize deterministic exploit proofs via localized LLM pipeline queries.
 The primary operational engine deployed within this registry is the DOM-Based XSS & Dynamic Code Execution Auditor.

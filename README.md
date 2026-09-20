@@ -127,7 +127,6 @@ Aegis-Zero strictly safeguards highly sensitive target telemetry details, tokens
 !/prompts/
 !/config/
 !/utils/
-!/.vscode/
 !/README.md
 !/run_analysis.py
 !/.gitignore
