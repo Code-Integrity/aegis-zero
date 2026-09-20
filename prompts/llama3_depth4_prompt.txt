@@ -35,7 +35,7 @@ Crucial Rule: All text values inside the JSON (such as "recon_summary", "descrip
       "drift_analysis": "これらのサブシステム間の境界がどのように崩壊したか（例：クッキーフラグの欠落によりJSによるインターセプトが可能になっているなど）を日本語で記述。"
     }
   ],
-  ...
+  
 ```
 
 ---
