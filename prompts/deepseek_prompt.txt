@@ -1,6 +1,9 @@
 # DeepSeek-R1 Depth4 Analysis Prompt
 You are an advanced reasoning model specialized in structural analysis of browser DevTools logs.
 
+Input Data (Depth4 Binary Tree / Event Flow):
+\$depth4_tree_data
+
 Your task:
 - Read the Depth4 binary tree (event flow)
 - Identify structural inconsistencies
@@ -14,10 +17,11 @@ Focus points:
 - Unexpected transitions or missing intermediate steps
 - Timing anomalies or dependency violations
 
+CRITICAL INSTRUCTIONS FOR DEEPSEEK-R1:
+1. You MUST execute your deep analytical reasoning inside the `<think>...</think>` tags (in English or Japanese).
+2. The final output outside the `<think>` tags MUST be strictly a single, valid JSON object following the format below.
+3. Every string value inside the JSON fields ("summary", "structural_causes", etc.) MUST be written in JAPANESE (日本語) as per the project requirements. Do not output English for the final JSON values.
+
 Output format (JSON):
-{
- "summary": "...",
- "suspicious_nodes": [...],
- "structural_causes": [...],
- "recommended_reobserve": [...]
+\[{  "summary": "解析結果の概要（日本語で記述してください）",  "suspicious_nodes": [],  "structural_causes": ["検出された構造的な原因・問題点1", "原因2"],  "recommended_reobserve": ["再観察を推奨するノードやフロー1", "フロー2"] \]
 }

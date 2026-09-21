@@ -1,102 +1,128 @@
 # Aegis-Zero Auditors
 
-## Precision JavaScript Static Analysis Module (Targeted Vulnerability Verification)
+## Precision JavaScript & Header Static Analysis Modules (Targeted Vulnerability Verification)
 
-The auditors/ directory encompasses independent, pluggable static analysis utility modules designed to dissect client-side source code, locate injection vectors, and synthesize deterministic exploit proofs via localized LLM pipeline queries.
-The primary operational engine deployed within this registry is the DOM-Based XSS & Dynamic Code Execution Auditor.
+The `auditors/` directory encompasses independent, pluggable analysis utility modules designed to dissect client-side source code, investigate dangerous response headers, locate injection vectors, and synthesize deterministic exploit proofs via localized LLM pipeline queries.
 
----
-
-## 1. Module Overview: js_domxss_auditor.py
-
-This engine performs fine-grained static dataflow tracing against isolated JavaScript targets, determining the precise link between untrusted input entries (Sources) and unshielded runtime evaluation primitives (Sinks).
-
-## 🛠️ Key Architectural Enhancements
-
-- Polymorphic Ingress Ingestion: Automatically toggles processing behaviors between parsing inner HTML inline <script> scopes and directly orchestrating network fetches to swallow standalone remote static assets (e.g., auth.js) passed directly from the recon phase.
-- Crash-Resilient Template Parsing: Utilizes strict string.Template key-substitution bindings rather than basic Python .format() calls, completely eliminating runtime crashes triggered by the native curly-brace {} structures inherent to JavaScript logic.
-- Automated Triage Compilation: Dynamically captures successful AI telemetry outputs and auto-compiles ready-to-submit HackerOne vulnerability advisories directly onto the persistent markdown repository storage path.
+Rather than executing generic scans, these engines are dynamically deployed by the core orchestrator based on threat profiles generated during the reconnaissance phase.
 
 ---
 
-## 2. Ingress Analysis Sequence Flow
+## 1. Complete Auditor Registry
 
-[Target URL Ingress]
-│
-▼
-┌───────────────────────┐
-│ 1. Data Fetch │ ──► Enforces strict requests client User-Agent masking
-└───────────────────────┘
-│
-▼
-┌───────────────────────┐
-│ 2. Telemetry Routing │ ──► Identifies content types (HTML DOM vs Standalone Script File)
-└───────────────────────┘
-│
-▼
-┌───────────────────────┐
-│ 3. Sink Telemetry │ ──► Isolates keywords: innerHTML, document.write, eval(, location.href
-└───────────────────────┘
-│
-▼
-┌───────────────────────┐
-│ 4. Prompt Synthesis │ ──► Mapped safely via string.Template keys ($js*code, $source_type)
-└───────────────────────┘
-│
-▼
-┌───────────────────────┐
-│ 5. Core Inference │ ──► Interfaces seamlessly via the centralized models/inference_engine
-└───────────────────────┘
-│
-▼
-┌───────────────────────┐
-│ 6. Auto-Compilation │ ──► Exports complete triage document maps to output/reports/h1_report*\*.md
-└───────────────────────┘
+Aegis-Zero deploys four specialized standalone verification engines, each utilizing crash-resilient `string.Template` engines and auto-compiling ready-to-submit **HackerOne triage markdown advisories** directly inside `output/reports/`:
+
+### 🏹 1. DOM-Based XSS Auditor (`js_domxss_auditor.py`)
+
+- **Perimeter:** Analyzes raw standalone JS assets (`.js` files) or inner HTML inline `<script>` scopes.
+- **Sinks Targeted:** `innerHTML`, `document.write`, `eval(`, `location.href`.
+- **Prompt Map:** `prompts/js_domxss_prompt.txt` (`$js_code`, `$source_type`).
+
+### 🍪 2. Cookie Security Auditor (`cookie_auditor.py`)
+
+- **Perimeter:** Evaluates live `Set-Cookie` response headers or raw session context injected from Recon telemetry.
+- **Flags Targeted:** Missing or weak `HttpOnly`, `Secure`, and `SameSite` attributes on sensitive session identifiers.
+- **Prompt Map:** `prompts/js_cookie_prompt.txt` (`$cookie_context`, `$source_type`).
+
+### 📡 3. Permissive CORS Leakage Auditor (`cors_auditor.py`)
+
+- **Perimeter:** Verifies Cross-Origin Resource Sharing controls. Features an **automated origin reflection simulator** that injects untrusted origins (`Origin: https://evil-attacker-perimeter.com`) to catch dynamic response reflections.
+- **Flaws Targeted:** Credential disclosures (`Credentials: true`) combined with wildcards or unvalidated origin reflection.
+- **Prompt Map:** `prompts/js_cors_prompt.txt` (`$cors_context`, `$source_type`).
+
+### 🛡️ 4. Structural CSP Bypass Auditor (`csp_auditor.py`)
+
+- **Perimeter:** Reviews active Content Security Policy layout restriction headers.
+- **Bypasses Targeted:** Presence of `'unsafe-inline'` without nonces, unsafe CDN white-lists allowing JSONP bypasses, or missing `object-src`.
+- **Prompt Map:** `prompts/js_csp_prompt.txt` (`$csp_context`, `$source_type`).
 
 ---
 
-## 3. Usage & Execution Integration## Automated Execution (Pipeline Orchestration Mode)
+## 2. Ingress Analysis & Routing Sequence Flow
 
-The Auditor layer triggers automatically when run_analysis.py flags an asset URL meeting the threat boundary scoring metrics inside config/settings.json:
+The core `run_analysis.py` controller driving Step 7 executes an **Automated Polymorphic Trigger Routing** loop:
 
+```text
+       [Recon Depth4 Tree / Scored Nodes]
+                       │
+                       ▼
+         [Step 6: AI Cognitive Inference] ──► Pre-scans logs for tags (XSS, COOKIE, CORS, CSP)
+                       │
+                       ▼
+      ┌─────────────────────────────────┐
+      │  Step 7: Smart Feedback Router  │
+      └─────────────────────────────────┘
+         │          │          │          │
+         ▼          ▼          ▼          ▼
+     [DOM-XSS]   [Cookie]    [CORS]     [CSP]   ──► (300s deep reasoning boundaries enforced)
+         │          │          │          │
+         └──────────┴──────────┴──────────┘
+                       │
+                       ▼
+         [Automated Triage Compilation]   ──► Compiles definitive report payload in Japanese (日本語)
+                       │
+                       ▼
+          [output/reports/h1_report_*.md] ──► Turn-key HackerOne advisory templates complete with PoCs
+```
+
+---
+
+## 3. Usage & Execution Integration
+
+### Automated Execution (Pipeline Orchestration Mode)
+
+The Auditor layer triggers automatically when `run_analysis.py` flags an asset URL or telemetry context meeting the threat boundary scoring metrics inside `config/settings.json`:
+
+```json
 "enable_targeted_auditor": true
+```
 
-## Manual Sandbox Verification (CLI Mode)
+### Manual Sandbox Verification (CLI / API Mode)
 
-To standalone-audit a targeted online asset or script path independently of the global DevTools tracking logs, query the script endpoint directly:
+To standalone-audit targeted online assets or raw telemetry blocks independently of the global DevTools tracking logs, you can call the modules directly or import them into custom test vectors.
 
-python3 auditors/js_domxss_auditor.py
+#### A. DOM-Based XSS Audit
 
-## Script API Ingress Integration
-
+```python
 from auditors.js_domxss_auditor import aegis_js_scan
+aegis_js_scan("https://target-perimeter.local")
+```
 
-# Scans HTML endpoints for inline blocks, or standalone JS links directly
+#### B. Cookie Flag Omission Audit
 
-aegis_js_scan("https://target-app.com")
+```python
+from auditors.cookie_auditor import aegis_cookie_scan
+# Inject loose cookie strings to compile an instant H1 report
+aegis_cookie_scan("https://target-perimeter.local", custom_cookie_header="session_token=xyz; SameSite=None;")
+```
+
+#### C. Permissive CORS Reflection Audit
+
+```python
+from auditors.cors_auditor import aegis_cors_scan
+# Simulates active origin reflection checks natively or passes logs
+aegis_cors_scan("https://target-perimeter.local")
+```
+
+#### D. Content Security Policy Bypass Audit
+
+```python
+from auditors.csp_auditor import aegis_csp_scan
+aegis_csp_scan("https://target-perimeter.local", custom_csp_header="script-src 'self' 'unsafe-inline';")
+```
 
 ---
 
-## 4. Unified Artifact Dependencies## Centralized Reasoning Prompt (prompts/js_domxss_prompt.txt)
+## 4. System Artifact Deliverables
 
-Contains the definitive, highly structured HackerOne simulation logic rules. Configured to output comprehensive vulnerability breakdowns, execution flow tracking, and precise context payloads in Japanese (日本語) to maximize hunter triage efficiency.
+All generated Markdown documents are cleanly committed to:
 
-## System Path Registry Definitions (config/paths.json)
+```text
+output/reports/h1_report_[vuln_type]_[target_identifier_suffix].md
+```
 
-The output report directories are fully mapped into the unified path scheme. Generated Markdown documents are cleanly committed to:
-
-output/reports/h1*report*[target_identifier_suffix].md
-
----
-
-## 5. Extensibility Framework
-
-The auditors/ ecosystem architecture is deliberately isolated and decoupled (疎結合). You can expand the analytical perimeter by simply dropping independent auditing scripts into this directory without modifying the core recon logging logic:
-
-- 🛡️ cookie_auditor.py: Hardening evaluation of SameSite, Secure, and HttpOnly attributes.
-- 🌐 cors_auditor.py: Verification of cross-origin state leakage controls.
-- 🔒 csp_auditor.py: Structural review of active layout restriction policies.
+_Every advisory output contains highly structured vulnerability breakdowns, execution data-flow tracing, impact summaries, and fully executable verification exploit/bypass PoC blueprints._
 
 ---
 
-## Maintained under proprietary security engineering standards by Code‑Integrity.
+Maintained under elite security engineering standards by Code‑Integrity.
