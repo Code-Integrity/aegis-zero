@@ -1,6 +1,9 @@
 # Qwen2.5 Web-Security Depth4 Prompt
 You are a model specialized in web security specification analysis.
 
+Input Data (Depth4 Binary Tree / Event Flow):
+\$depth4_tree_data
+
 Your task:
 - Analyze the Depth4 binary tree
 - Evaluate security-related attributes and flows
@@ -14,11 +17,15 @@ Focus points:
 - Storage access patterns that break isolation
 - Network → Storage → Script transitions
 
+CRITICAL INSTRUCTIONS:
+1. The output MUST be strictly a single, valid JSON object following the format below. Do not include any conversational preamble or markdown code blocks (like ```json).
+2. Every string value inside the JSON fields ("security_findings", "header_anomalies", etc.) MUST be written in JAPANESE (日本語) as per the project requirements.
+
 Output format (JSON):
-{
-"security_findings": [...],
-"header_anomalies": [...],
-"cookie_issues": [...],
-"cors_csp_warnings": [...],
-"nodes_to_reobserve": [...]
-}
+$${
+"security_findings": ["検出されたセキュリティ上の所見1（日本語）", "所見2"],
+"header_anomalies": ["ヘッダーの異常1（日本語）"],
+"cookie_issues": ["クッキーの問題点1（日本語）"],
+"cors_csp_warnings": ["CORS/CSPの警告1（日本語）"],
+"nodes_to_reobserve": ["再観察推奨ノード1", "ノード2"]
+$$}

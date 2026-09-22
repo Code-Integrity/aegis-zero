@@ -1,3 +1,5 @@
+# run_analysis.py
+
 import json
 import os
 import sys
@@ -17,9 +19,12 @@ from recon.depth4_tree import preprocess_devtools_logs_depth4
 from recon.scoring import preprocess_and_score_logs
 
 # ---------------------------------------------------------
-# Vulnerability Static Auditors
+# Vulnerability Static Auditors (Polymorphic Registry)
 # ---------------------------------------------------------
 from auditors.js_domxss_auditor import aegis_js_scan
+from auditors.cookie_auditor import aegis_cookie_scan
+from auditors.cors_auditor import aegis_cors_scan
+from auditors.csp_auditor import aegis_csp_scan
 
 # ---------------------------------------------------------
 # LLM Inference Orchestration
@@ -60,7 +65,6 @@ def main() -> None:
     settings = cfg["settings"]
 
     # [Step 1.5] Enforce Output Directory Tree Existence
-    # Ensure all target output directories exist on the local file system before writing artifacts
     for path_key, path_val in paths.items():
         if path_key.endswith("_output") or path_key in ["llama_payload", "llama_output"]:
             if path_val:  # Defensive guard for None/empty values
@@ -75,7 +79,6 @@ def main() -> None:
 
     # [Step 3] Depth4 Structural Tree Generation
     log("[3] Normalizing logs and constructing Depth4 structural tree...")
-    # Leveraging the enhanced depth4_tree module with correlational flow tracing
     depth4_tree_json = preprocess_devtools_logs_depth4(
         network_logs, console_logs, storage_logs, sources_logs
     )
@@ -90,7 +93,6 @@ def main() -> None:
     scored_tree = []
     if settings.get("enable_scoring", True):
         log("[4] Executing tactical vulnerability scoring and threat sorting...")
-        # Generates prioritized nodes sorted in descending order of risk score
         scored_tree = preprocess_and_score_logs(
             network_logs, console_logs, storage_logs, sources_logs
         )
@@ -110,41 +112,80 @@ def main() -> None:
         log(f"[OK] LLM-ready prompt context successfully serialized -> {paths.get('llama_payload')}")
 
     # [Step 6] Automated AI Structural Reasoning
+    llama_output = ""
     if settings.get("enable_llama_inference", True):
         log("[6] Launching autonomous LLM structural inference engine...")
         llama_output = run_llama_inference()
         save_text(paths.get("llama_output"), llama_output)
         log(f"[OK] Autonomous security reasoning complete -> {paths.get('llama_output')}")
 
-    # [Step 7] Smart Feedback Loop: Targeted Static Auditing (Recon-to-Audit Link)
+    # [Step 7] Smart Feedback Loop: Polymorphic Trigger Routing (Recon-to-Audit Link)
     if settings.get("enable_targeted_auditor", True) and scored_tree:
-        log("[7] Evaluating 'High/Medium' priority nodes to trigger precision Auditors...")
+        log("[7] Evaluating 'High/Medium' priority nodes to trigger specific polymorphic Auditors...")
         
-        # Extract high-confidence static auditing targets (URLs / endpoints) from prioritized recon nodes
-        audit_targets = set()
+        # 7.1 Pre-scan AI's cognitive inference text to build dynamic global tags
+        ai_focus_tags = []
+        if llama_output:
+            upper_output = llama_output.upper()
+            if "CORS" in upper_output: ai_focus_tags.append("CORS")
+            if "COOKIE" in upper_output or "SET-COOKIE" in upper_output: ai_focus_tags.append("COOKIE")
+            if "CSP" in upper_output or "CONTENT-SECURITY-POLICY" in upper_output: ai_focus_tags.append("CSP")
+            if "XSS" in upper_output or "DOM-XSS" in upper_output: ai_focus_tags.append("XSS")
+            log(f"[INFO] AI Cognitive Layer signaled high-suspicion tags: {ai_focus_tags}")
+
+        # 7.2 Core routing matrix iterating over prioritized recon data
         for node in scored_tree:
             if node.get("vuln_level") in ["High", "Medium"]:
-                # Isolate target asset identifiers (e.g., source file URLs or target endpoints)
-                raw_event = node.get("raw", {}).get("event")
+                raw_event = node.get("raw", {}).get("event", "")
                 source_tab = node.get("source_tab")
+                vuln_reasons = str(node.get("vuln_reasons", "")).upper()
                 
-                if source_tab in ["Network", "Sources"] and raw_event:
-                    # Filter for legitimate web URLs to analyze
-                    if raw_event.startswith("http://") or raw_event.startswith("https://"):
-                        audit_targets.add(raw_event)
+                # Setup default fallback asset URL tracking bounds
+                target_url = raw_event if (raw_event.startswith("http://") or raw_event.startswith("https://")) else settings.get("fallback_target_url", "https://target-perimeter.local")
 
-        # Automatically deploy JavaScript Static Auditors on high-suspicion surface targets
-        if audit_targets:
-            log(f"[!] Isolated {len(audit_targets)} high-suspicion attack vectors for specialized verification.")
-            for target_url in audit_targets:
-                log(f"[+] Deploying DOM-Based XSS Auditor against target: {target_url}")
-                try:
-                    # Trigger the static audit layer seamlessly
-                    aegis_js_scan(target_url)
-                except Exception as audit_error:
-                    log(f"[ERROR] Auditor execution failed for target {target_url}: {str(audit_error)}")
-        else:
-            log("[INFO] No critical application drift targets met the threshold for auto-auditing.")
+                # --- ROUTE ENTRYPOINT 1: DOM-Based XSS Asset Checking ---
+                if (source_tab in ["Network", "Sources"] and ("XSS" in ai_focus_tags or "XSS" in vuln_reasons)) or "EVAL" in vuln_reasons or "INNERHTML" in vuln_reasons:
+                    if raw_event.startswith("http://") or raw_event.startswith("https://"):
+                        log(f"[+] Polymorphic Trigger: Deploying DOM-Based XSS Auditor against: {target_url}")
+                        try:
+                            aegis_js_scan(target_url)
+                        except Exception as e:
+                            log(f"[ERROR] DOMXSS Auditor crash: {str(e)}")
+
+                # --- ROUTE ENTRYPOINT 2: Cookie Transport Security Hardening ---
+                if "COOKIE" in ai_focus_tags or "COOKIE" in vuln_reasons or "HTTPONLY" in vuln_reasons:
+                    # Capture injected telemetry strings from raw context arrays if available
+                    injected_cookie_str = node.get("raw", {}).get("cookie_header") or node.get("raw", {}).get("response_headers", {}).get("Set-Cookie")
+                    log(f"[+] Polymorphic Trigger: Deploying Specialized Cookie Auditor against: {target_url}")
+                    try:
+                        aegis_cookie_scan(target_url, custom_cookie_header=injected_cookie_str)
+                    except Exception as e:
+                        log(f"[ERROR] Cookie Auditor crash: {str(e)}")
+
+                # --- ROUTE ENTRYPOINT 3: Permissive CORS Leakage Checking ---
+                if "CORS" in ai_focus_tags or "CORS" in vuln_reasons or "ACCESS-CONTROL-ALLOW" in vuln_reasons:
+                    injected_cors_str = node.get("raw", {}).get("cors_header") or node.get("raw", {}).get("response_headers", {})
+                    if isinstance(injected_cors_str, dict):
+                        # Convert dict headers to standardized string blocks for the prompt template
+                        injected_cors_str = "\n".join([f"{k}: {v}" for k, v in injected_cors_str.items() if k.lower().startswith("access-control-")])
+                    
+                    log(f"[+] Polymorphic Trigger: Deploying Specialized CORS Auditor against: {target_url}")
+                    try:
+                        aegis_cors_scan(target_url, custom_cors_headers=injected_cors_str if injected_cors_str else None)
+                    except Exception as e:
+                        log(f"[ERROR] CORS Auditor crash: {str(e)}")
+
+                # --- ROUTE ENTRYPOINT 4: Structural CSP Bypass Tracking ---
+                if "CSP" in ai_focus_tags or "CSP" in vuln_reasons or "CONTENT-SECURITY-POLICY" in vuln_reasons:
+                    injected_csp_str = node.get("raw", {}).get("csp_header") or node.get("raw", {}).get("response_headers", {}).get("Content-Security-Policy")
+                    log(f"[+] Polymorphic Trigger: Deploying Specialized CSP Auditor against: {target_url}")
+                    try:
+                        aegis_csp_scan(target_url, custom_csp_header=injected_csp_str)
+                    except Exception as e:
+                        log(f"[ERROR] CSP Auditor crash: {str(e)}")
+
+    else:
+        log("[INFO] No critical application drift targets met the threshold for dynamic auto-auditing.")
 
     log("=== Finalized: AEGIS-ZERO Complete End-to-End Execution Sequence ===")
 

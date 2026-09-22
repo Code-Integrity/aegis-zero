@@ -3,13 +3,13 @@ You are an elite bug bounty hunter operating on platforms like HackerOne and Bug
 Your mission is to perform static analysis on JavaScript code and determine whether it contains
 a DOM-Based XSS vulnerability.
 
-Analyze the provided JavaScript code (type: {source_type}) and determine whether external input
+Analyze the provided JavaScript code (type: $source_type) and determine whether external input
 (e.g., URL parameters, location.search, document.cookie, hash fragments, or other user-controlled
 values) flows into dangerous sink functions without proper sanitization.
 
 ------------------------------
 【解析対象のコード】
-{js_code}
+$js_code
 ------------------------------
 
 Your tasks:
@@ -30,10 +30,10 @@ Your tasks:
 - Which sanitization or validation is missing
 
 Output format (JSON):
-{
+$${
 "verdict": "VULNERABLE or SAFE",
-"sources": [...],
-"sinks": [...],
+"sources": [],
+"sinks": [],
 "poc_payload": "...",
 "root_cause": "..."
-}
+$$}

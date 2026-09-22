@@ -3,10 +3,12 @@
 import os
 import subprocess
 import requests
+import re
 from bs4 import BeautifulSoup
 from string import Template
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from utils.logger import log
+from utils.file_io import load_json
 
 # Dangerous dynamic evaluation sinks often targeted in bug bounty reconnaissance
 SINK_KEYWORDS: List[str] = [
@@ -17,8 +19,19 @@ SINK_KEYWORDS: List[str] = [
 ]
 
 PROMPT_PATH: str = "prompts/js_domxss_prompt.txt"
+CONFIG_MODEL_PATH: str = "config/model.json"
 # Standardized location to save the synthesized hackerone vulnerability document
 H1_REPORT_OUTPUT_DIR: str = "output/reports"
+
+
+def load_model_config() -> Dict[str, Any]:
+    """
+    Loads model deployment schemas from the centralized config mapping profile.
+    Falls back to a safe default if missing.
+    """
+    if not os.path.exists(CONFIG_MODEL_PATH):
+        return {"llama_model_path": "llama3.2"}
+    return load_json(CONFIG_MODEL_PATH) or {}
 
 
 def load_prompt_template() -> Template:
@@ -47,21 +60,37 @@ def build_prompt(template: Template, js_code: str, source_type: str) -> str:
 def call_llama_with_prompt(prompt: str) -> str:
     """
     Orchestrates subprocess execution to query local Ollama container.
-    Enforces strict execution timeout boundaries to prevent execution lock.
-    Uses target JSON restriction parameters if specified.
+    Enforces strict 300s execution timeout boundaries and JSON formatting 
+    to handle complex logic reasoning and DeepSeek thoughts cleanly.
     """
+    model_cfg = load_model_config()
+    # Dynamically hot-swap the model based on centralized configuration profile
+    model_tag = model_cfg.get("llama_model_path", "llama3.2")
+
     try:
         result = subprocess.run(
-            ["ollama", "run", "llama3.2"],
+            ["ollama", "run", model_tag, "--format", "json"],
             input=prompt,
             capture_output=True,
             text=True,
             encoding="utf-8",
-            timeout=60,
+            timeout=300,  # Upgraded to 300s to align with system boundaries
         )
-        return result.stdout or "[INFO] Model execution completed with empty payload feedback."
+        
+        if result.returncode != 0:
+            error_msg = result.stderr or "Unknown terminal execution fault."
+            return f"[ERROR] Ollama daemon runtime fault: {error_msg}"
+            
+        raw_output = result.stdout or ""
+        
+        # --- Clean up terminal control codes & Ollama progress junk codes ---
+        clean_output = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]|\x1b\][0-9;]*[a-zA-Z]', '', raw_output)
+        clean_output = re.sub(r'\[\d+[D|K]', '', clean_output)
+        
+        return clean_output.strip() or "[INFO] Model execution completed with empty payload feedback."
+        
     except subprocess.TimeoutExpired:
-        return "[ERROR] AI inference pipeline execution halted due to timeout exhaustion."
+        return f"[ERROR] AI inference pipeline execution halted due to timeout exhaustion (300s) for model [{model_tag}]."
     except Exception as e:
         return f"[ERROR] AI orchestrator pipeline initialization fault: {str(e)}"
 
@@ -79,17 +108,16 @@ def export_hackerone_report(target_url: str, index_label: str, ai_feedback: str)
     report_file_path = os.path.join(H1_REPORT_OUTPUT_DIR, f"h1_report_{safe_filename_suffix}.md")
     
     markdown_blueprint = f"""# [HackerOne Vulnerability Report] Targeted Static Analysis Breakdown
-
 ## 1. Vulnerability Ingress Target
-* **Target Asset Vector Identification:** `{target_url}`
-* **Analysis Inspection Scope:** `{index_label}`
+* **Target Asset Vector Identification:** {target_url}
+* **Analysis Inspection Scope:** {index_label}
 * **Automated Scanner Perimeter:** Aegis-Zero JavaScript Static Auditor Component
 
 ## 2. Core Strategic Threat Analysis (AI Security Feedback Engine Output)
 The following technical diagnostics and contextual architectural analysis streams were 
 extracted autonomously from the local containerized inference runtime layer:
 
-```text
+```json
 {ai_feedback.strip()}
 ```
 
