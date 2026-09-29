@@ -210,3 +210,5 @@ While the Apache License permits reuse and modification, the author requests the
   please include clear credit to **Code‑Integrity**.
 
 These courtesy guidelines do not alter the Apache License terms.
+
+Note: Commits after September 2026 are 100% SSH-signed (Verified badge) as part of integrating enhanced remote OPSEC and code integrity standards shifting from private environments.
