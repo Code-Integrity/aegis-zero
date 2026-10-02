@@ -133,34 +133,42 @@ def main() -> None:
             if "XSS" in upper_output or "DOM-XSS" in upper_output: ai_focus_tags.append("XSS")
             log(f"[INFO] AI Cognitive Layer signaled high-suspicion tags: {ai_focus_tags}")
 
-        # 7.2 Core routing matrix iterating over prioritized recon data
+                # 7.2 Core routing matrix iterating over prioritized recon data
         for node in scored_tree:
-            if node.get("vuln_level") in ["High", "Medium"]:
+            
+            if True: 
                 raw_event = node.get("raw", {}).get("event", "")
                 source_tab = node.get("source_tab")
                 vuln_reasons = str(node.get("vuln_reasons", "")).upper()
                 
-                # Setup default fallback asset URL tracking bounds
-                target_url = raw_event if (raw_event.startswith("http://") or raw_event.startswith("https://")) else settings.get("fallback_target_url", "https://target-perimeter.local")
+                
+                target_url = raw_event if (str(raw_event).startswith("http://") or str(raw_event).startswith("https://")) else settings.get("fallback_target_url", f"https://{settings.get('fallback_target_url', 'motel6.com')}")
 
                 # --- ROUTE ENTRYPOINT 1: DOM-Based XSS Asset Checking ---
-                if (source_tab in ["Network", "Sources"] and ("XSS" in ai_focus_tags or "XSS" in vuln_reasons)) or "EVAL" in vuln_reasons or "INNERHTML" in vuln_reasons:
-                    if raw_event.startswith("http://") or raw_event.startswith("https://"):
-                        log(f"[+] Polymorphic Trigger: Deploying DOM-Based XSS Auditor against: {target_url}")
-                        try:
-                            aegis_js_scan(target_url)
-                        except Exception as e:
-                            log(f"[ERROR] DOMXSS Auditor crash: {str(e)}")
+                
+                if ("XSS" in ai_focus_tags or "XSS" in vuln_reasons or "EVAL" in vuln_reasons or "INNERHTML" in vuln_reasons):
+                    log(f"[+] Polymorphic Trigger: Deploying DOM-Based XSS Auditor against: {target_url}")
+                    try:
+                        aegis_js_scan(target_url)
+                    except Exception as e:
+                        log(f"[ERROR] DOMXSS Auditor crash: {str(e)}")
+
+                    log("[INFO] Target achieved. Breaking loop to protect local PC resources.")
+                    break    
 
                 # --- ROUTE ENTRYPOINT 2: Cookie Transport Security Hardening ---
-                if "COOKIE" in ai_focus_tags or "COOKIE" in vuln_reasons or "HTTPONLY" in vuln_reasons:
-                    # Capture injected telemetry strings from raw context arrays if available
+                
+                if True: 
                     injected_cookie_str = node.get("raw", {}).get("cookie_header") or node.get("raw", {}).get("response_headers", {}).get("Set-Cookie")
                     log(f"[+] Polymorphic Trigger: Deploying Specialized Cookie Auditor against: {target_url}")
                     try:
                         aegis_cookie_scan(target_url, custom_cookie_header=injected_cookie_str)
                     except Exception as e:
                         log(f"[ERROR] Cookie Auditor crash: {str(e)}")
+
+                    log("[INFO] Target achieved. Breaking loop to protect local PC resources.")
+                    break    
+
 
                 # --- ROUTE ENTRYPOINT 3: Permissive CORS Leakage Checking ---
                 if "CORS" in ai_focus_tags or "CORS" in vuln_reasons or "ACCESS-CONTROL-ALLOW" in vuln_reasons:
@@ -175,6 +183,9 @@ def main() -> None:
                     except Exception as e:
                         log(f"[ERROR] CORS Auditor crash: {str(e)}")
 
+                    log("[INFO] Target achieved. Breaking loop to protect local PC resources.")
+                    break    
+
                 # --- ROUTE ENTRYPOINT 4: Structural CSP Bypass Tracking ---
                 if "CSP" in ai_focus_tags or "CSP" in vuln_reasons or "CONTENT-SECURITY-POLICY" in vuln_reasons:
                     injected_csp_str = node.get("raw", {}).get("csp_header") or node.get("raw", {}).get("response_headers", {}).get("Content-Security-Policy")
@@ -183,6 +194,9 @@ def main() -> None:
                         aegis_csp_scan(target_url, custom_csp_header=injected_csp_str)
                     except Exception as e:
                         log(f"[ERROR] CSP Auditor crash: {str(e)}")
+
+                    log("[INFO] Target achieved. Breaking loop to protect local PC resources.")
+                    break    
 
     else:
         log("[INFO] No critical application drift targets met the threshold for dynamic auto-auditing.")
